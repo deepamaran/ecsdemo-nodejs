@@ -2,12 +2,21 @@
 var express = require('express');
 var app = express();
 
-var fs = require('fs');
-var code_hash = fs.readFileSync('code_hash.txt','utf8');
-console.log (code_hash);
-console.log('The IPADDRESS is:', process.env.IP);
-console.log('The message is:', process.env.AZ);
-console.log('The hash is: %s', code_hash);
+var fs = require('fs').promises;
+var code_hash = '';
+
+async function initializeApp() {
+  try {
+    code_hash = await fs.readFile('code_hash.txt', 'utf8');
+    code_hash = code_hash.trim();
+    console.log('The hash is: %s', code_hash);
+    console.log('The IPADDRESS is:', process.env.IP);
+    console.log('The message is:', process.env.AZ);
+  } catch (error) {
+    console.error('Error reading code_hash.txt:', error.message);
+    code_hash = 'unknown';
+  }
+}
 
 var ipaddress = process.env.IP;
 var message = process.env.AZ;
@@ -29,7 +38,8 @@ app.get('/', function (req, res) {
 });
 
 // health route - variable subst is more pythonic just as an example
-var server = app.listen(3000, function() {
+var server = app.listen(3000, async function() {
+  await initializeApp();
   var port = server.address().port;
   console.log('Example app listening on port %s!', port);
 });
